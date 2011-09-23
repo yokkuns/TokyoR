@@ -1,24 +1,39 @@
+##
+## インストールと読み込み
+##
 install.packages("Matching")
 library(Matching)
-
-##
-## Matching
-##
-
 data(lalonde)
 
-Y78 <- lalonde$re78
-Tre <- lalonde$treat
+##
+## 傾向スコアの算出
+##
 logi <- glm(treat~., data=lalonde[,-9],family=binomial)
 
-## default
-summary(Match(Y=Y78, Tr=Tre,X=logi$fitted))
 
-## 
-summary(Match(Y=Y78, Tr=Tre,X=logi$fitted,M=2))
+## マッチングでNSWプログラムの効果を推定
+nsw1 <- Match(Y=lalonde$re78, Tr=lalonde$treat,X=logi$fitted)
+summary(nsw1)
 
-## caliper matching
-summary(Match(Y=Y78, Tr=Tre,X=logi$fitted,caliper=T))
+## マッチングのペアの確認
+lalonde2 <- lalonde
+lalonde2$id <- 1:nrow(lalonde2)
+lalonde2$score <- logi$fitted
+
+pair.df <- cbind(lalonde2[nsw1$index.treated, c("id","score")],
+                 lalonde2[nsw1$index.control, c("id","score")])
+
+names(pair.df) <- c("t.id", "t.score", "c.id", "c.score")
+
+head(pair.df)
+
+## キャリパーマッチングでNSWプログラムの効果を推定
+nsw2 <- Match(Y=lalonde$re78, Tr=lalonde$treat,X=logi$fitted, caliper=T)
+summary(nsw2)
+
+
+
+
 
 ##
 ## kernel matching
