@@ -1,0 +1,31 @@
+---
+title: "大量のグラフを作成する"
+output: html_document
+---
+
+
+```{r}
+ 　####################################
+    # 大量のグラフを作る
+    ####################################
+    #データの読み込み
+    data <- read.csv("section6_data.csv", as.is=T)
+    data$date <- as.Date(data$date)
+
+    # グラフ作成用ライブラリ
+    library(ggplot2)
+    library(scales)
+
+    # グラフ作成
+    for( i in 3:ncol(data) ) {
+        label <- names(data)[i]
+        tmp <- data[, c(1:2, i)]
+        
+        gp <- ggplot(tmp, aes_string(x="date", y="payment", col=label) + 
+                  geom_line() + xlab("") + ylab("売上") +
+                  scale_y_continuous(label=comma) +
+                 ggtitle(sprintf("%s別売上推移", label)
+        print(gp)
+    }
+
+```

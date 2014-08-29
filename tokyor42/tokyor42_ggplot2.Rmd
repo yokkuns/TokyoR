@@ -1,0 +1,457 @@
+---
+title: "TokyoR#42 データの可視化（ggplot2）"
+author: "里洋平（@yokkuns）"
+date: "2014年8月26日"
+output: html_document
+---
+
+
+https://atnd.org/events/54680
+
+## ライブラリの読み込み
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+library(ggplot2)
+```
+
+## データの準備
+
+仮想データの作成
+
+### 商品1の月次売上データ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+sales.data1 <- data.frame(
+  item="item1",
+  m=4:9,
+  month=paste0("2014-0",c(4:9)),
+  sales=c(800,1000,1800,1500,1400,2000))
+
+sales.data1
+```
+
+### 商品1,2の月次売上データ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+sales.data2 <- data.frame(
+  item="item2",
+  m=4:9,
+  month=paste0("2014-0",c(4:9)),
+  sales=c(700,900,1500,1700,1800,2400))
+sales.data12 <- rbind(sales.data1, sales.data2)
+sales.data12
+```
+
+
+### 店舗1〜3の商品3,4の日次売上データ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+set.seed(10)
+sales.data34 <- data.frame(
+  shop=sample(1:3,100,replace=T),
+  item3=rnorm(100,100,30)
+  )
+
+sales.data34$item4 <- round(0.9 * sales.data34$item3 + 
+                              80 * sales.data34$shop + 
+                              rnorm(100,30,15))
+
+sales.data34$shop <- paste0("shop",sales.data34$shop)
+head(sales.data34)
+```
+
+## 棒グラフを描く
+
+### 基本的な棒グラフ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity")
+```
+
+#### 背景色の変更
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 背景を白にする
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity") +
+  theme_bw()
+```
+
+#### グラフタイトルとラベルの追加
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+## タイトルとx軸とy軸のラベルを付ける
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  theme_bw()
+```
+
+#### 日本語フォントの設定
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  theme_bw(base_family="Osaka")
+```
+
+#### 数値フォーマットの変更
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 数値フォーマット用のライブラリ
+library(scales)
+
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### 棒の上に値を表示する
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+## 数値を出力する
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(label=sales), vjust=-0.2) +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+## 数値のフォーマットを3ケタ区切りにする
+ggplot(sales.data1, aes(x=month, y=sales)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(label=comma(sales)), vjust=-0.2) +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+### 積み上げ棒グラフ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 積み上げ棒グラフ
+ggplot(sales.data12, aes(x=month, y=sales, fill=item)) +
+  geom_bar(stat="identity") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### 色セットの変更
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+library(RColorBrewer)
+rownames(brewer.pal.info)
+```
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+display.brewer.all()
+```
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+ggplot(sales.data12, aes(x=month, y=sales, fill=item)) +
+  geom_bar(stat="identity") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw(base_family="Osaka")
+```
+#### 棒に枠をつける
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 積み上げ棒グラフで枠を付ける
+ggplot(sales.data12, aes(x=month, y=sales, fill=item)) +
+  geom_bar(stat="identity", col="black") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw(base_family="Osaka")
+```
+
+### 100%積み上げ棒グラフ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 100％積み上げグラフ
+ggplot(sales.data12, aes(x=month, y=sales, fill=item)) +
+  geom_bar(position="fill",stat="identity", col="black") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw(base_family="Osaka")
+```
+
+### 棒グラフを横に並べる
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+## 水平に棒グラフを並べる
+ggplot(sales.data12, aes(x=month, y=sales, fill=item)) +
+  geom_bar(position="dodge",stat="identity",col="black") +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw(base_family="Osaka")
+```
+
+## 折れ線グラフを描く
+
+### 基本的な折れ線グラフ
+#### xが数値
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# xが数値
+ggplot(sales.data1, aes(x=m, y=sales)) +
+  geom_line() +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### xがファクター
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# xがファクター
+ggplot(sales.data1, aes(x=month, y=sales,group=1)) +
+  geom_line() +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### y軸の範囲の指定
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+ylimit <- c(0,max(sales.data1$sales))
+ggplot(sales.data1, aes(x=month, y=sales,group=1)) +
+  geom_line() +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma,limits=ylimit) +
+  theme_bw(base_family="Osaka")
+```
+
+#### 点の追加
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 点を追加
+ggplot(sales.data1, aes(x=month, y=sales,group=1)) +
+  geom_line() +
+  geom_point() +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma,limits=ylimit) +
+  theme_bw(base_family="Osaka")
+```
+
+### グループ別の折れ線グラフ
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# グループごとに折れ線グラフ
+ylimit <- c(0,max(sales.data12$sales))
+ggplot(sales.data12, aes(x=month, y=sales,group=item,col=item)) +
+  geom_line() +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma,limits=ylimit) +
+  theme_bw(base_family="Osaka")
+```
+
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# グループごとに線の種類を変える
+ggplot(sales.data12, aes(x=month, y=sales,group=item,col=item,lty=item)) +
+  geom_line() +
+  xlab("月") +
+  ylab("売上") +
+  ggtitle("売上推移") +
+  scale_y_continuous(label=comma,limits=ylimit) +
+  theme_bw(base_family="Osaka")
+```
+
+## 散布図を描く
+
+
+### 基本的な散布図
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 基本的な散布図
+ggplot(sales.data34, aes(x=item3, y=item4)) +
+  geom_point() +
+  xlab("item3") +
+  ylab("item4") +
+  ggtitle("item3とitem4の散布図") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### 点の形を変える
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 塗りつぶしなしの散布図
+ggplot(sales.data34, aes(x=item3, y=item4)) +
+  geom_point(shape=21) +
+  xlab("item3") +
+  ylab("item4") +
+  ggtitle("item3とitem4の散布図") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### グループごとに色や形を変える
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# グループごとに色と形を変える
+ggplot(sales.data34, aes(x=item3, y=item4, col=shop, shape=shop)) +
+  geom_point() +
+  xlab("item3") +
+  ylab("item4") +
+  ggtitle("item3とitem4の散布図") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+### 回帰直線
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 回帰直線の追加
+ggplot(sales.data34, aes(x=item3, y=item4)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  xlab("item3") +
+  ylab("item4") +
+  ggtitle("item3とitem4の散布図") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+### グループごとに回帰直線
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# グループごとに回帰直線を引く
+ggplot(sales.data34, aes(x=item3, y=item4, col=shop, shape=shop,group=shop)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  xlab("item3") +
+  ylab("item4") +
+  ggtitle("item3とitem4の散布図") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+## ヒストグラムを描く
+
+### 基本的なヒストグラム
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# 基本
+ggplot(sales.data34, aes(x=item3)) +
+  geom_histogram() +
+  ggtitle("item3の売上分布") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+#### 棒に枠をつけて、白色に
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+ggplot(sales.data34, aes(x=item3)) +
+  geom_histogram(fill="white",col="black") +
+  ggtitle("item3の売上分布") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+### 棒の幅の設定
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# ビン幅を10に設定
+ggplot(sales.data34, aes(x=item3)) +
+  geom_histogram(fill="white",col="black",binwidth=10) +
+  ggtitle("item3の売上分布") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+### グループ別のヒストグラム
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+# グループごとに色を付ける
+ggplot(sales.data34, aes(x=item3,fill=shop)) +
+  geom_histogram(position="dodge",col="black",binwidth=10) +
+  ggtitle("item3の売上分布") +
+  scale_y_continuous(label=comma) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw(base_family="Osaka")
+```
+
+## 箱ひげ図を描く
+
+### 基本的な箱ひげ図
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+ggplot(sales.data34, aes(x=shop,y=item3)) +
+  geom_boxplot() +
+  ggtitle("店舗ごとのitem3の売上分布") +
+  scale_y_continuous(label=comma) +
+  theme_bw(base_family="Osaka")
+```
+
+### グループごとに箱ひげ図を描く
+
+
+```{r warning=FALSE,message=FALSE,fig.width=8,fig.height=6}
+library(reshape2)
+
+sales.data34.melt <- 
+  melt(sales.data34,id.vars=c("shop"),value.names=c("item3","item4"))
+
+ggplot(sales.data34.melt, aes(x=variable,y=value)) +
+  geom_boxplot() +
+  xlab("") +
+  ylab("売上") +
+  ggtitle("店舗ごとのitem3,4の売上分布") +
+  scale_y_continuous(label=comma) +
+  facet_grid(.~shop) +
+  theme_bw(base_family="Osaka")
+```
+
+## 参考
+
+戦略的データマイニング (シリーズ Useful R 4) の第３章
+
+```{r results='asis',echo=FALSE}
+cat('<iframe src="http://rcm-fe.amazon-adsystem.com/e/cm?t=yokkuns-22&o=9&p=8&l=as1&asins=4320123670&nou=1&ref=tf_til&fc1=000000&IS2=1&lt1=_blank&m=amazon&lc1=0000FF&bc1=000000&bg1=FFFFFF&f=ifr" style="width:120px;height:240px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>')
+```
